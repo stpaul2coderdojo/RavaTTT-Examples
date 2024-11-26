@@ -1,0 +1,141 @@
+{
+  "version": "1.0",
+  "event_stream": {
+    "id": "camera_stream_001",
+    "type": "sensor_stream",
+    "sensor_type": "camera",
+    "protocol": "WebRTC",
+    "format": "RGB",
+    "resolution": "1920x1080",
+    "frame_rate": "30fps"
+  },
+  "sensors": [
+    {
+      "name": "camera_stream",
+      "id": "sensor_01",
+      "type": "video",
+      "data_type": "image",
+      "stream": "camera_stream_001",
+      "processor": "pose_estimation"
+    }
+  ],
+  "processors": [
+    {
+      "id": "pose_estimation",
+      "type": "skeleton_segmentation",
+      "framework": "OpenPose",
+      "input": "camera_stream",
+      "output": "skeleton_data",
+      "keypoints": [
+        "nose",
+        "left_eye",
+        "right_eye",
+        "left_shoulder",
+        "right_shoulder",
+        "left_elbow",
+        "right_elbow",
+        "left_wrist",
+        "right_wrist",
+        "left_hip",
+        "right_hip",
+        "left_knee",
+        "right_knee",
+        "left_ankle",
+        "right_ankle"
+      ]
+    }
+  ],
+  "events": [
+    {
+      "id": "yoga_pose_detected",
+      "trigger": "pose_detected",
+      "conditions": {
+        "sensor": "camera_stream",
+        "processor": "pose_estimation",
+        "keypoints_in_frame": [
+          "left_wrist",
+          "right_wrist",
+          "left_ankle",
+          "right_ankle"
+        ]
+      },
+      "action": "analyze_pose",
+      "parameters": {
+        "pose": "Tree Pose",
+        "threshold": "0.85"
+      }
+    }
+  ],
+  "actions": [
+    {
+      "id": "analyze_pose",
+      "type": "pose_evaluation",
+      "input": "skeleton_data",
+      "output": "pose_correction",
+      "method": "skeleton_animation_analysis",
+      "posture_requirements": [
+        {
+          "name": "alignment_check",
+          "joints_involved": [
+            "left_shoulder",
+            "right_shoulder",
+            "spine"
+          ],
+          "rule": "vertical_alignment",
+          "tolerance": "5_degrees"
+        },
+        {
+          "name": "balance_check",
+          "joints_involved": [
+            "left_ankle",
+            "right_ankle",
+            "hips"
+          ],
+          "rule": "balanced_weight_distribution",
+          "tolerance": "5%"
+        },
+        {
+          "name": "arm_position",
+          "joints_involved": [
+            "left_wrist",
+            "right_wrist"
+          ],
+          "rule": "above_head_straight",
+          "tolerance": "10_degrees"
+        }
+      ]
+    }
+  ],
+  "alerts": [
+    {
+      "id": "incorrect_posture_detected",
+      "trigger": "pose_correction",
+      "conditions": [
+        {
+          "posture_error": true
+        }
+      ],
+      "action": "notify_user",
+      "message": "Incorrect posture detected. Please adjust your shoulders and align your spine.",
+      "urgency": "high"
+    }
+  ]
+}
+
+Explanation of the Components:
+event_stream: The input camera stream, specified as a video sensor with resolution, frame rate, and format details.
+sensors: The camera sensor streams the video frames to a processor that handles pose estimation.
+processors: A processor named pose_estimation uses a pose estimation framework like OpenPose to identify and track key skeletal points (joints).
+events: An event is triggered when a certain yoga pose (e.g., Tree Pose) is detected by analyzing the key skeletal points in the camera stream.
+actions: The system analyzes the pose for correct alignment using specified posture requirements.
+alerts: If an incorrect posture is detected, a notification is sent to alert the user with specific instructions.
+Skeleton Animation for Posture Analysis
+In the pose_evaluation action, a skeleton animation analysis is conducted using the following methods:
+
+Alignment Check: Ensures the shoulders are aligned vertically with a tolerance of 5 degrees.
+Balance Check: Analyzes the distribution of weight across the ankles and hips for proper balance.
+Arm Position Check: Verifies that arms are straight and above the head, within a tolerance of 10 degrees.
+Benefits of the RAVATTT Event Language:
+Enables real-time detection and analysis of yoga poses.
+Provides feedback on incorrect postures, helping users improve their form.
+Supports flexible integration with any camera-based input using protocols like WebRTC.
