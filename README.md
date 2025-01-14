@@ -1,2 +1,2 @@
 # RavaTTT-Examples
-A collection of RavaTTT Examples, publishedo ravattt.wordpress.com
+A collection of RavaTTT Examples, published to ravattt.wordpress.com
